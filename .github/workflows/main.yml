@@ -1,0 +1,51 @@
+name: Production Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.1
+
+      - name: Install Composer Dependencies
+        run: composer install --no-scripts
+
+      # - name: Create .env file
+      #   run: cp .env.example .env
+
+      # - name: Generate Application Key
+      #   run: php artisan key:generate
+
+      # - name: Run Database Migrations
+      #   run: php artisan migrate
+
+      # - name: Build Assets (if applicable)
+      #   run: npm install && npm run production
+
+  deploy:
+    runs-on: ubuntu-latest
+
+    needs: build
+
+    steps:
+      - name: Deploy to cPanel
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.CPANEL_HOST }}
+          username: ${{ secrets.CPANEL_USERNAME }}
+          password: ${{ secrets.CPANEL_PASSWORD }}
+          local-dir: ./
+          server-dir: public_html/
+          protocol: ftps
+          port: 21
